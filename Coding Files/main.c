@@ -17,62 +17,57 @@ typedef struct {
 	float temperature;
 } I2C_SOIL_SENSOR;
 
-static void Delay(uint32_t delay) {
-	while ((Delay_ms - t) < bekle);
-}
+//static void Delay(uint32_t delay) {
+//	while ((delay - t) < bekle);
+//}
 
 
 // For the servo motor
 void PWM_Init() {
+	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOEEN; //enable clock for GPIOE
+	
+	// Enable TIM1 Clock
 	// TODO
-	// Enable the clock for GPIOE
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOEEN;
-	// Set Mode of PB6 to alternative= 10
-	GPIOE->MODER |= GPIO_MODER_MODE11_1;
-	GPIOE->MODER &= ~GPIO_MODER_MODE11_0;
-	// Set correct alternative function for PE11 to 0001
-	GPIOE->AFR[1] &= ~GPIO_AFRH_AFSEL11_3; // 0
-	GPIOE->AFR[1] &= ~GPIO_AFRH_AFSEL11_2; // 0
-	GPIOE->AFR[1] &= ~GPIO_AFRH_AFSEL11_1; // 0
-	GPIOE->AFR[1] |= GPIO_AFRH_AFSEL11_0; // 1
-	// Set PB6 to No pull up, No pull down
-	GPIOE->PUPDR &= ~GPIO_PUPDR_PUPD11_1; //setting PE6 to NPUNPD
-	GPIOE->PUPDR &= ~GPIO_PUPDR_PUPD11_0; //setting PE6 to NPUNPD
-	// Set to very high output speed = 11
-	GPIOE->OSPEEDR |= GPIO_OSPEEDR_OSPEED11_1; // 1
-	GPIOE->OSPEEDR |= GPIO_OSPEEDR_OSPEED11_0; // 1
-	// Set the prescaler to 15 so the clock is 1MHz
-	TIM1->PSC = 15;
-	// Enable timer 1 for RCC_APB2ENR
 	RCC->APB2ENR |= RCC_APB2ENR_TIM1EN; //enable clock of timer 1
-	// Enable auto preload in CR for TIM1
-	TIM1->CR1 |= TIM_CR1_ARPE; // Setting register is buffered
-	// Set auto reload to maximum value
-	TIM1->ARR = 199;
-	// Set the CCR2 value
-	TIM1->CCR2 = 20; // set the duty cycle of the PWM output to 10
+	
+	// Configure PE8
+	// TODO
+	//alternative function for PE8, alternative function = 10
+	GPIOE->MODER &= ~GPIO_MODER_MODE8_0 ; //set PE8 to alternative function
+	GPIOE->MODER |= GPIO_MODER_MODE8_1 ; //set PE8 to alternative function
+	
+	//setting PE8 to very high output speed = 11
+	GPIOE->OSPEEDR |= GPIO_OSPEEDR_OSPEED8_0;//setting PE8 very high output speed
+	GPIOE->OSPEEDR |= GPIO_OSPEEDR_OSPEED8_1;//setting PE8 very high output speed
+	
+	//config. pe8 to npunpd = 00
+	GPIOE->PUPDR &= ~GPIO_PUPDR_PUPD8_0; //setting PE8 to NPUNPD
+	GPIOE->PUPDR &= ~GPIO_PUPDR_PUPD8_1; //setting PE8 to NPUNPD
+	
+	//config. alternative function for PE8 = 0001
+	GPIOE->AFR[1] |= GPIO_AFRH_AFSEL8_0; //setting pin 0 of AF1 to high *** look for AFRH
+	GPIOE->AFR[1] &= ~GPIO_AFRH_AFSEL8_1;
+	GPIOE->AFR[1] &= ~GPIO_AFRH_AFSEL8_2;
+	GPIOE->AFR[1] &= ~GPIO_AFRH_AFSEL8_3;
+	
+	TIM1->CR1 &= ~TIM_CR1_DIR; //setting pin 4 to low to set the direction to up **** check 
+	TIM1->PSC = 7999; // *** just to test, set prescaler to /7999
+	TIM1->ARR = 199; // *** just to test, set auto-reload to 16^2
+	TIM1->CCR1 = 10; // set the duty cycle of the PWM output to 50% (i.e. 32768 -> in hex:0x8000)
+	//TIM1->CCMR1 |= TIM_CCMR1_OC1CE; // Output compare 1 clear enable
+	
 	//This section sets CCMR1 output compare mode to PWM mode 1, which corresponds to OC1M = 0110
-	TIM1->CCMR1 &= ~TIM_CCMR1_OC2M_0; // Set the ouptput comapre mode bits to PWM mode 1
-	TIM1->CCMR1 |= TIM_CCMR1_OC2M_1; // Set the ouptput comapre mode bits to PWM mode 1
-	TIM1->CCMR1 |= TIM_CCMR1_OC2M_2; // Set the ouptput comapre mode bits to PWM mode 1
-	TIM1->CCMR1 &= ~TIM_CCMR1_OC2M_3; // Set the ouptput comapre mode bits to PWM mode 1
-	// Enable the output compare preload
-	TIM1->CCMR1 |= TIM_CCMR1_OC2PE; //enable output preload
-	// Enable output capture compare enable register
-	TIM1->CCER |= TIM_CCER_CC2E;
-	// in break and dead time register set bits main output enable 
-	TIM1->BDTR |= TIM_BDTR_MOE;
-	TIM1->BDTR |= TIM_BDTR_OSSR;
-	// Event Generation Register, enable update generation 
-	TIM1->EGR |= TIM_EGR_UG; 
-	// Clear the update interrupt flag
-	TIM1->SR &= ~TIM_SR_UIF;
-	//enable update interrupt enable
-	TIM1->DIER |= TIM_DIER_UIE;
-	//Enable the counter of the control register
-	TIM1->CR1 |= TIM_CR1_CEN;
-	// Control register: Set the direction of the counter to up*** check if not up
-	TIM1->CR1 &= ~TIM_CR1_DIR; 
+	TIM1->CCMR1 &= ~TIM_CCMR1_OC1M_0; // Set the ouptput comapre mode bits to PWM mode 1
+	TIM1->CCMR1 |= TIM_CCMR1_OC1M_1; // Set the ouptput comapre mode bits to PWM mode 1
+	TIM1->CCMR1 |= TIM_CCMR1_OC1M_2; // Set the ouptput comapre mode bits to PWM mode 1
+	TIM1->CCMR1 &= ~TIM_CCMR1_OC1M_3; // Set the ouptput comapre mode bits to PWM mode 1
+	
+	TIM1->CCMR1 |= TIM_CCMR1_OC1PE; //enable output preload for ch 1N
+	TIM1->CCER &= ~TIM_CCER_CC1NP; // set output polarity to active high ch 1N ****** check
+	TIM1->CCER |= TIM_CCER_CC1NE; // enable output for channel 1N
+	TIM1->BDTR |= TIM_BDTR_MOE; //enable the main output 
+	
+	TIM1->CR1 |= TIM_CR1_CEN; //set bit 0 to 1 to enable the counter
 }
  
 int main() {
@@ -92,7 +87,7 @@ int main() {
 	USART_Init(USART2);
 	
 	// Initialization - We will use the default 4 MHz clock
-	//PWM_Init();
+	PWM_Init();
 	
 	printf("TEST\n");
 	
@@ -101,8 +96,6 @@ int main() {
 	uint8_t SlaveAddress = 0x36 << 1; // Address of the slave sensor I2C
 	uint8_t SEESAW_TOUCH_BASE = 0x0F;
 	uint8_t SEESAW_TOUCH_CHANNEL_OFFSET = 0x10;
-//	uint8_t start_send = SEESAW_SERCOM0_BASE | SEESAW_STATUS_HW_ID;
-//	I2C_SendData(I2C1, SlaveAddress, &start_send, 1);
 	while(1) {
 		// // TODO (changing duty cycle, etc.)
 		// // Change CCR1 to decide how long the pulse is high for 1ms 0degrees, 1.5ms 90degrees, 2ms is 180degrees
@@ -125,24 +118,12 @@ int main() {
 		// //printf("Sensed: %d\n", ret);
 		
 		// for(i = 0; i < 500; ++i); // Some Delay
-		
-		
-		for(i=0; i<1000000; ++i){ // Some Delay
-			TIM1->CCR2 = 20;
-		//for(i=0; i<1000; ++i); // Some Delay
-		}
-		for(i=0; i<1000000; ++i){ // Some Delay
-			TIM1->CCR2 = 15;
-		//for(i=0; i<1000; ++i); // Some Delay
-		}
-		for(i=0; i<1000000; ++i){ // Some Delay
-			TIM1->CCR2 = 10;
-		//for(i=0; i<1000; ++i); // Some Delay
-		}
-		for(i=0; i<1000000; ++i){ // Some Delay
-			TIM1->CCR2 = 15;
-		//for(i=0; i<1000; ++i); // Some Delay
-		}
+		int off = 10; // this is 0 degrees 10 / 200 = 0.05
+		int on = 15; // this is 90 degrees 15 / 200 = 0.075
+		TIM1->CCR1 = off;
+		for(int i=0; i<1000; ++i);
+		TIM1->CCR1 = on;
+		for(int i=0; i<1000; ++i);
 	}
 	
 	return 0;
