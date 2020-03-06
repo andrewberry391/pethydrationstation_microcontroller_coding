@@ -17,6 +17,10 @@ typedef struct {
 	float temperature;
 } I2C_SOIL_SENSOR;
 
+static void Delay(uint32_t delay) {
+	while ((Delay_ms - t) < bekle);
+}
+
 
 // For the servo motor
 void PWM_Init() {
@@ -37,7 +41,7 @@ void PWM_Init() {
 	// Set to very high output speed = 11
 	GPIOE->OSPEEDR |= GPIO_OSPEEDR_OSPEED11_1; // 1
 	GPIOE->OSPEEDR |= GPIO_OSPEEDR_OSPEED11_0; // 1
-	// Set the prescaler to 15
+	// Set the prescaler to 15 so the clock is 1MHz
 	TIM1->PSC = 15;
 	// Enable timer 1 for RCC_APB2ENR
 	RCC->APB2ENR |= RCC_APB2ENR_TIM1EN; //enable clock of timer 1
@@ -100,45 +104,45 @@ int main() {
 //	uint8_t start_send = SEESAW_SERCOM0_BASE | SEESAW_STATUS_HW_ID;
 //	I2C_SendData(I2C1, SlaveAddress, &start_send, 1);
 	while(1) {
-		// TODO (changing duty cycle, etc.)
-		// Change CCR1 to decide how long the pulse is high for 1ms 0degrees, 1.5ms 90degrees, 2ms is 180degrees
-		uint8_t data_send[2] = {SEESAW_TOUCH_BASE, SEESAW_TOUCH_CHANNEL_OFFSET};
-		//uint8_t data_send = SEESAW_TOUCH_BASE | SEESAW_TOUCH_CHANNEL_OFFSET;
-		uint8_t data_recieved[2];
-		uint16_t ret;
-		//do {
-			//for(i = 0; i < 1000; ++i); // Some Delay
-			I2C_SendData(I2C1, SlaveAddress, data_send, 2);
+		// // TODO (changing duty cycle, etc.)
+		// // Change CCR1 to decide how long the pulse is high for 1ms 0degrees, 1.5ms 90degrees, 2ms is 180degrees
+		// uint8_t data_send[2] = {SEESAW_TOUCH_BASE, SEESAW_TOUCH_CHANNEL_OFFSET};
+		// //uint8_t data_send = SEESAW_TOUCH_BASE | SEESAW_TOUCH_CHANNEL_OFFSET;
+		// uint8_t data_recieved[2];
+		// uint16_t ret;
+		// //do {
+		// 	//for(i = 0; i < 1000; ++i); // Some Delay
+		// 	I2C_SendData(I2C1, SlaveAddress, data_send, 2);
 		
-			//for(i = 0; i < 1000; ++i); // Some Delay
-			I2C_ReceiveData(I2C1, SlaveAddress, data_recieved, 2);
+		// 	//for(i = 0; i < 1000; ++i); // Some Delay
+		// 	I2C_ReceiveData(I2C1, SlaveAddress, data_recieved, 2);
 			
-			ret = ((uint16_t)data_recieved[0]<<8) | data_recieved[1];
-		//}while (ret == 65535);
+		// 	ret = ((uint16_t)data_recieved[0]<<8) | data_recieved[1];
+		// //}while (ret == 65535);
 		
-		sprintf(message, "%6d\n", ret);
-		LCD_DisplayString((uint8_t*) message);
-		//printf("Sensed: %d\n", ret);
+		// sprintf(message, "%6d\n", ret);
+		// LCD_DisplayString((uint8_t*) message);
+		// //printf("Sensed: %d\n", ret);
 		
-		for(i = 0; i < 500; ++i); // Some Delay
+		// for(i = 0; i < 500; ++i); // Some Delay
 		
 		
-//		for(i=0; i<1000000; ++i){ // Some Delay
-//			TIM1->CCR2 = 20;
-//		//for(i=0; i<1000; ++i); // Some Delay
-//		}
-//		for(i=0; i<1000000; ++i){ // Some Delay
-//			TIM1->CCR2 = 15;
-//		//for(i=0; i<1000; ++i); // Some Delay
-//		}
-//		for(i=0; i<1000000; ++i){ // Some Delay
-//			TIM1->CCR2 = 10;
-//		//for(i=0; i<1000; ++i); // Some Delay
-//		}
-//		for(i=0; i<1000000; ++i){ // Some Delay
-//			TIM1->CCR2 = 15;
-//		//for(i=0; i<1000; ++i); // Some Delay
-//		}
+		for(i=0; i<1000000; ++i){ // Some Delay
+			TIM1->CCR2 = 20;
+		//for(i=0; i<1000; ++i); // Some Delay
+		}
+		for(i=0; i<1000000; ++i){ // Some Delay
+			TIM1->CCR2 = 15;
+		//for(i=0; i<1000; ++i); // Some Delay
+		}
+		for(i=0; i<1000000; ++i){ // Some Delay
+			TIM1->CCR2 = 10;
+		//for(i=0; i<1000; ++i); // Some Delay
+		}
+		for(i=0; i<1000000; ++i){ // Some Delay
+			TIM1->CCR2 = 15;
+		//for(i=0; i<1000; ++i); // Some Delay
+		}
 	}
 	
 	return 0;
