@@ -3,7 +3,7 @@
  *
  * Name(s): Andrew Berry and Alice Patig
  * Section: Tuesday
- * Lab: 2A
+ * Final Project
  */
 
 #include "stm32l476xx.h"
@@ -75,8 +75,8 @@ int main() {
 	System_Clock_Init(); // System Clock = 80 MHz
 	
 	// Initialize LCD
-	//LCD_Initialization();
-	//LCD_Clear();
+	LCD_Initialization();
+	LCD_Clear();
 	
 	// Initialize I2C
 	I2C_GPIO_Init();
