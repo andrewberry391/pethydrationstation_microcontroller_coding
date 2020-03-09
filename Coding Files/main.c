@@ -118,8 +118,8 @@ int main() {
 		// //printf("Sensed: %d\n", ret);
 		
 		// for(i = 0; i < 500; ++i); // Some Delay
-		int open = 7; // this is 0 degrees 10 / 200 = 0.05
-		int closed = 13; // this is 90 degrees 15 / 200 = 0.075
+		int open = 6; // this is 0 degrees 10 / 200 = 0.05
+		int closed = 12; // this is 90 degrees 15 / 200 = 0.075
 		LCD_DisplayString("OPEN  ");
 		TIM1->CCR1 = open;
 		for(int i=0; i<10000000; ++i);
