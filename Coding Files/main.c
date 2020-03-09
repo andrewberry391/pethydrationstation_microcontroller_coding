@@ -53,7 +53,7 @@ void PWM_Init() {
 	TIM1->CR1 &= ~TIM_CR1_DIR; //setting pin 4 to low to set the direction to up **** check 
 	TIM1->PSC = 7999; // *** just to test, set prescaler to /7999
 	TIM1->ARR = 199; // *** just to test, set auto-reload to 16^2
-	TIM1->CCR1 = 10; // set the duty cycle of the PWM output to 50% (i.e. 32768 -> in hex:0x8000)
+	TIM1->CCR1 = 0; // set the duty cycle of the PWM output to 50% (i.e. 32768 -> in hex:0x8000)
 	//TIM1->CCMR1 |= TIM_CCMR1_OC1CE; // Output compare 1 clear enable
 	
 	//This section sets CCMR1 output compare mode to PWM mode 1, which corresponds to OC1M = 0110
@@ -118,12 +118,14 @@ int main() {
 		// //printf("Sensed: %d\n", ret);
 		
 		// for(i = 0; i < 500; ++i); // Some Delay
-		int off = 10; // this is 0 degrees 10 / 200 = 0.05
-		int on = 15; // this is 90 degrees 15 / 200 = 0.075
-		TIM1->CCR1 = off;
-		for(int i=0; i<1000; ++i);
-		TIM1->CCR1 = on;
-		for(int i=0; i<1000; ++i);
+		int open = 7; // this is 0 degrees 10 / 200 = 0.05
+		int closed = 13; // this is 90 degrees 15 / 200 = 0.075
+		LCD_DisplayString("OPEN  ");
+		TIM1->CCR1 = open;
+		for(int i=0; i<10000000; ++i);
+		LCD_DisplayString("CLOSED");
+		TIM1->CCR1 = closed;
+		for(int i=0; i<10000000; ++i);
 	}
 	
 	return 0;
