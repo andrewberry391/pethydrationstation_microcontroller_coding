@@ -1,4 +1,5 @@
 #include "I2C.h"
+#include "LCD.h"
 
 extern void Error_Handler(void);
 
@@ -90,7 +91,7 @@ void I2C_Initialization(void){
 	RCC->APB1RSTR1 &= ~RCC_APB1RSTR1_I2C1RST;
 	
 	// Disable the I2C peripheral so that modifications can be made to the register
-	//I2C1->CR1 &= ~I2C_CR1_PE;
+	I2C1->CR1 &= ~I2C_CR1_PE;
 	
 	// Enable the analog noise filter = 0
 	I2C1->CR1 &= ~I2C_CR1_ANFOFF;
@@ -166,7 +167,7 @@ int8_t I2C_Start(I2C_TypeDef * I2Cx, uint32_t DevAddress, uint8_t Size, uint8_t 
 	// sequence is sent, by an arbitration loss, by a timeout error detection, or when PE = 0.
 	tmpreg = I2Cx->CR2;
 	
-	tmpreg &= (uint32_t)~((uint32_t)(I2C_CR2_SADD | I2C_CR2_NBYTES | I2C_CR2_RELOAD | I2C_CR2_AUTOEND | I2C_CR2_RD_WRN | I2C_CR2_START | I2C_CR2_STOP));
+	tmpreg &= (uint32_t)~((uint32_t)(I2C_CR2_SADD | I2C_CR2_NBYTES | I2C_CR2_AUTOEND | I2C_CR2_RELOAD | I2C_CR2_ADD10 | I2C_CR2_RD_WRN | I2C_CR2_START | I2C_CR2_STOP));
 	
 	if (Direction == READ_FROM_SLAVE)
 		tmpreg |= I2C_CR2_RD_WRN;  // Read from Slave
@@ -175,9 +176,13 @@ int8_t I2C_Start(I2C_TypeDef * I2Cx, uint32_t DevAddress, uint8_t Size, uint8_t 
 		
 	tmpreg |= (uint32_t)(((uint32_t)DevAddress & I2C_CR2_SADD) | (((uint32_t)Size << 16 ) & I2C_CR2_NBYTES));
 	
-	tmpreg |= I2C_CR2_START;
+	//tmpreg |= I2C_CR2_START;
 	
-	I2Cx->CR2 = tmpreg; 
+	//I2Cx->CR2 = tmpreg; 
+	I2Cx->CR2 = tmpreg;
+	
+	I2Cx->CR2 |= I2C_CR2_START;
+
 	
    	return 0;  // Success
 }
@@ -220,7 +225,7 @@ int8_t I2C_SendData(I2C_TypeDef * I2Cx, uint8_t DeviceAddress, uint8_t *pData, u
 	for (i = 0; i < Size; i++) {
 		// TXE is set by hardware when the I2C_TXDR register is empty. It is cleared when the next
 		// data to be sent is written in the I2C_TXDR register.
-		while( (I2Cx->ISR & I2C_ISR_TXE) == 0 ); 
+		//while( (I2Cx->ISR & I2C_ISR_TXE) == 0 ); 
 
 		// TXIS bit is set by hardware when the I2C_TXDR register is empty and the data to be
 		// transmitted must be written in the I2C_TXDR register. It is cleared when the next data to be
@@ -251,7 +256,7 @@ int8_t I2C_ReceiveData(I2C_TypeDef * I2Cx, uint8_t DeviceAddress, uint8_t *pData
 	I2C_WaitLineIdle(I2Cx);
 
 	I2C_Start(I2Cx, DeviceAddress, Size, READ_FROM_SLAVE); // 0 = sending data to the slave, 1 = receiving data from the slave
-						  	
+	
 	for (i = 0; i < Size; i++) {
 		// Wait until RXNE flag is set 	
 		while( (I2Cx->ISR & I2C_ISR_RXNE) == 0 );

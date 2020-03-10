@@ -97,35 +97,38 @@ int main() {
 	uint8_t SEESAW_TOUCH_BASE = 0x0F;
 	uint8_t SEESAW_TOUCH_CHANNEL_OFFSET = 0x10;
 	while(1) {
-		// // TODO (changing duty cycle, etc.)
-		// // Change CCR1 to decide how long the pulse is high for 1ms 0degrees, 1.5ms 90degrees, 2ms is 180degrees
-		// uint8_t data_send[2] = {SEESAW_TOUCH_BASE, SEESAW_TOUCH_CHANNEL_OFFSET};
-		// //uint8_t data_send = SEESAW_TOUCH_BASE | SEESAW_TOUCH_CHANNEL_OFFSET;
-		// uint8_t data_recieved[2];
-		// uint16_t ret;
+		// TODO (changing duty cycle, etc.)
+		// Change CCR1 to decide how long the pulse is high for 1ms 0degrees, 1.5ms 90degrees, 2ms is 180degrees
+		uint8_t data_send[2] = {SEESAW_TOUCH_BASE, SEESAW_TOUCH_CHANNEL_OFFSET};
+		//uint8_t data_send = SEESAW_TOUCH_BASE | SEESAW_TOUCH_CHANNEL_OFFSET;
+		uint8_t data_recieved[2];
+		uint16_t ret;
 		// //do {
-		// 	//for(i = 0; i < 1000; ++i); // Some Delay
-		// 	I2C_SendData(I2C1, SlaveAddress, data_send, 2);
+		//for(i = 0; i < 1000; ++i); // Some Delay
+		I2C_SendData(I2C1, SlaveAddress, data_send, 2);
 		
-		// 	//for(i = 0; i < 1000; ++i); // Some Delay
-		// 	I2C_ReceiveData(I2C1, SlaveAddress, data_recieved, 2);
+		I2C1->ICR |= I2C_ICR_STOPCF;
+		//for(i = 0; i < 1000; ++i); // Some Delay
+		I2C_ReceiveData(I2C1, SlaveAddress, data_recieved, 2);
 			
-		// 	ret = ((uint16_t)data_recieved[0]<<8) | data_recieved[1];
-		// //}while (ret == 65535);
+		ret = ((uint16_t)data_recieved[0]<<8) | data_recieved[1];
+		//}while (ret == 65535);
 		
-		// sprintf(message, "%6d\n", ret);
-		// LCD_DisplayString((uint8_t*) message);
-		// //printf("Sensed: %d\n", ret);
+		printf("Received Value: %d\n", ret);
 		
-		// for(i = 0; i < 500; ++i); // Some Delay
-		int open = 6; // this is 0 degrees 10 / 200 = 0.05
-		int closed = 12; // this is 90 degrees 15 / 200 = 0.075
-		LCD_DisplayString("OPEN  ");
-		TIM1->CCR1 = open;
-		for(int i=0; i<10000000; ++i);
-		LCD_DisplayString("CLOSED");
-		TIM1->CCR1 = closed;
-		for(int i=0; i<10000000; ++i);
+		//sprintf(message, "%6d\n", ret);
+		//LCD_DisplayString((uint8_t*) message);
+		//printf("Sensed: %d\n", ret);
+		
+		for(i = 0; i < 500; ++i); // Some Delay
+//		int open = 6; // this is 0 degrees 10 / 200 = 0.05
+//		int closed = 12; // this is 90 degrees 15 / 200 = 0.075
+//		LCD_DisplayString("OPEN  ");
+//		TIM1->CCR1 = open;
+//		for(int i=0; i<10000000; ++i);
+//		LCD_DisplayString("CLOSED");
+//		TIM1->CCR1 = closed;
+//		for(int i=0; i<10000000; ++i);
 	}
 	
 	return 0;
