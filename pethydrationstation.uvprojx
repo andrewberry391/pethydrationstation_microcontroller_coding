@@ -383,16 +383,6 @@
           <GroupName>Source Group 1</GroupName>
           <Files>
             <File>
-              <FileName>I2C.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\Coding Files\I2C.c</FilePath>
-            </File>
-            <File>
-              <FileName>I2C.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\Coding Files\I2C.h</FilePath>
-            </File>
-            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Coding Files\main.c</FilePath>
@@ -441,6 +431,46 @@
               <FileName>LCD.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\Coding Files\LCD.h</FilePath>
+            </File>
+            <File>
+              <FileName>L3GD20.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Coding Files\L3GD20.c</FilePath>
+            </File>
+            <File>
+              <FileName>L3GD20.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Coding Files\L3GD20.h</FilePath>
+            </File>
+            <File>
+              <FileName>SPI.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Coding Files\SPI.c</FilePath>
+            </File>
+            <File>
+              <FileName>SPI.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Coding Files\SPI.h</FilePath>
+            </File>
+            <File>
+              <FileName>SysTimer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Coding Files\SysTimer.c</FilePath>
+            </File>
+            <File>
+              <FileName>SysTimer.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Coding Files\SysTimer.h</FilePath>
+            </File>
+            <File>
+              <FileName>EXTI.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Coding Files\EXTI.c</FilePath>
+            </File>
+            <File>
+              <FileName>EXTI.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\Coding Files\EXTI.h</FilePath>
             </File>
           </Files>
         </Group>

@@ -8,18 +8,13 @@
 
 #include "stm32l476xx.h"
 #include "SysClock.h"
-#include "UART.h" // Comment out to use LCD
-#include "LCD.h" // Comment out to use UART
-#include "I2C.h"
-
-typedef struct {
-	float humidity;
-	float temperature;
-} I2C_SOIL_SENSOR;
-
-//static void Delay(uint32_t delay) {
-//	while ((delay - t) < bekle);
-//}
+#include "SysTimer.h"
+#include "UART.h"
+#include "LCD.h"
+#include "L3GD20.h"
+#include "SPI.h"
+#include <stdio.h>
+#include "EXTI.h"
 
 
 // For the servo motor
@@ -70,16 +65,22 @@ void PWM_Init() {
 	TIM1->CR1 |= TIM_CR1_CEN; //set bit 0 to 1 to enable the counter
 }
  
+typedef struct {
+	float x;
+	float y;
+	float z;
+} L3GD20_Data_t;
+
 int main() {
 	System_Clock_Init(); // System Clock = 80 MHz
+	SysTick_Init();
+	
+	// Initialize Gyroscope
+	GYRO_Init(); 
 	
 	// Initialize LCD
 	LCD_Initialization();
 	LCD_Clear();
-	
-	// Initialize I2C
-	I2C_GPIO_Init();
-	I2C_Initialization();
 	
 	// Initialize UART2 for USB Communication
 	UART2_Init();
@@ -89,38 +90,58 @@ int main() {
 	// Initialization - We will use the default 4 MHz clock
 	PWM_Init();
 	
-	printf("TEST\n");
+	// Initialize intterupt from arduino
+	EXTI_Init();
 	
-	int i;
-	char message[6];
-	uint8_t SlaveAddress = 0x36 << 1; // Address of the slave sensor I2C
-	uint8_t SEESAW_TOUCH_BASE = 0x0F;
-	uint8_t SEESAW_TOUCH_CHANNEL_OFFSET = 0x10;
+	L3GD20_Data_t data;
+	int dispensing = 6; // this is 0 degrees 10 / 200 = 0.05
+	int not_dispensing = 12; // this is 90 degrees 15 / 200 = 0.075
 	while(1) {
-		// TODO (changing duty cycle, etc.)
-		// Change CCR1 to decide how long the pulse is high for 1ms 0degrees, 1.5ms 90degrees, 2ms is 180degrees
-		uint8_t data_send[2] = {SEESAW_TOUCH_BASE, SEESAW_TOUCH_CHANNEL_OFFSET};
-		//uint8_t data_send = SEESAW_TOUCH_BASE | SEESAW_TOUCH_CHANNEL_OFFSET;
-		uint8_t data_recieved[2];
-		uint16_t ret;
-		// //do {
-		//for(i = 0; i < 1000; ++i); // Some Delay
-		I2C_SendData(I2C1, SlaveAddress, data_send, 2);
 		
-		I2C1->ICR |= I2C_ICR_STOPCF;
-		//for(i = 0; i < 1000; ++i); // Some Delay
-		I2C_ReceiveData(I2C1, SlaveAddress, data_recieved, 2);
+		//read gyroscope's status register to verify that there is new data to be read
+		uint8_t temp = 0x00;
+		GYRO_IO_Read(&temp, L3GD20_STATUS_REG_ADDR, 1);	
+			uint8_t templ = 0x00;
+			uint8_t temph = 0x00;
 			
-		ret = ((uint16_t)data_recieved[0]<<8) | data_recieved[1];
-		//}while (ret == 65535);
-		
-		printf("Received Value: %d\n", ret);
-		
+			GYRO_IO_Read(&templ, L3GD20_OUT_X_L_ADDR, 1);
+			GYRO_IO_Read(&temph, L3GD20_OUT_X_H_ADDR, 1);
+			int16_t out_x = templ | temph<<8;
+			
+			GYRO_IO_Read(&templ, L3GD20_OUT_Y_L_ADDR, 1);
+			GYRO_IO_Read(&temph, L3GD20_OUT_Y_H_ADDR, 1);
+			int16_t out_y = templ | temph<<8;
+			
+			GYRO_IO_Read(&templ, L3GD20_OUT_Z_L_ADDR, 1);
+			GYRO_IO_Read(&temph, L3GD20_OUT_Z_H_ADDR, 1);
+			int16_t out_z = templ | temph<<8;
+			
+			float conversion = 0.07;
+		printf("Difference: previous: %f, new: %f\n", data.x, conversion*out_x);
+			if((data.x - conversion*out_x > 50)){
+				printf("START");
+				TIM1->CCR1 = dispensing;
+				LCD_DisplayString("START");
+				delay(3000); // 3 seconds
+			} else {
+				printf("Stop");
+				TIM1->CCR1 = not_dispensing;
+				LCD_DisplayString("STOP   ");
+			}
+			data.x = conversion*out_x;
+			data.y = conversion*out_y;
+			data.z = conversion*out_z;
+			
+			
+			// printf("(out_x, out_y, out_z):   (%.00f, %.00f, %.00f)\n", data.x, data.y, data.z);
+		}
+		delay(500); // Small delay between receiving measurements
+
 		//sprintf(message, "%6d\n", ret);
 		//LCD_DisplayString((uint8_t*) message);
 		//printf("Sensed: %d\n", ret);
 		
-		for(i = 0; i < 500; ++i); // Some Delay
+//		for(i = 0; i < 500; ++i); // Some Delay
 //		int open = 6; // this is 0 degrees 10 / 200 = 0.05
 //		int closed = 12; // this is 90 degrees 15 / 200 = 0.075
 //		LCD_DisplayString("OPEN  ");
@@ -129,7 +150,6 @@ int main() {
 //		LCD_DisplayString("CLOSED");
 //		TIM1->CCR1 = closed;
 //		for(int i=0; i<10000000; ++i);
-	}
 	
 	return 0;
 }
