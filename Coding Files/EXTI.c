@@ -36,13 +36,20 @@ void EXTI_Init(void) {
 
 int dispensing = 6; // this is 0 degrees 10 / 200 = 0.05
 int not_dispensing = 12; // this is 90 degrees 15 / 200 = 0.075
+int hold_dispensing = 11; // this is when there is a delay from the UART
 
 void EXTI0_IRQHandler(void) { // When interrupt occurs fill bowl until interrupt stops
 	// Clear interrupt pending bit
 	EXTI->PR1 |= EXTI_PR1_PIF0;
-	
 	// Define behavior that occurs when interrupt occurs
-	TIM1->CCR1 = dispensing;
-	LCD_DisplayString("START");
-	for(int i = 0; i < 1000000; i++);
+	if(USART1->RDR & 0xFF){
+		TIM1->CCR1 = hold_dispensing;
+		LCD_DisplayString("HOLD");
+	}
+	if(TIM1->CCR1 != hold_dispensing) {
+		printf("START\n");
+		TIM1->CCR1 = dispensing;
+		LCD_DisplayString("START");
+		for(int i = 0; i < 1000000; i++);
+	}
 }
