@@ -82,10 +82,15 @@ int main() {
 	LCD_Initialization();
 	LCD_Clear();
 	
-	// Initialize UART2 for USB Communication
-	UART2_Init();
-	UART2_GPIO_Init();
-	USART_Init(USART2);
+	// Initialize UART1 for Bluetooth Communication
+	UART1_Init();
+	UART1_GPIO_Init();
+	USART_Init(USART1);
+	
+//	// Initialize UART2 for USB Communication
+//	UART2_Init();
+//	UART2_GPIO_Init();
+//	USART_Init(USART2);
 	
 	// Initialization - We will use the default 4 MHz clock
 	PWM_Init();
@@ -96,60 +101,59 @@ int main() {
 	L3GD20_Data_t data;
 	int dispensing = 6; // this is 0 degrees 10 / 200 = 0.05
 	int not_dispensing = 12; // this is 90 degrees 15 / 200 = 0.075
-	while(1) {
-		
+	int hold_dispensing = 11; // this is when there is a delay from the UART
+	while(1) {		
 		//read gyroscope's status register to verify that there is new data to be read
 		uint8_t temp = 0x00;
 		GYRO_IO_Read(&temp, L3GD20_STATUS_REG_ADDR, 1);	
-			uint8_t templ = 0x00;
-			uint8_t temph = 0x00;
-			
-			GYRO_IO_Read(&templ, L3GD20_OUT_X_L_ADDR, 1);
-			GYRO_IO_Read(&temph, L3GD20_OUT_X_H_ADDR, 1);
-			int16_t out_x = templ | temph<<8;
-			
-			GYRO_IO_Read(&templ, L3GD20_OUT_Y_L_ADDR, 1);
-			GYRO_IO_Read(&temph, L3GD20_OUT_Y_H_ADDR, 1);
-			int16_t out_y = templ | temph<<8;
-			
-			GYRO_IO_Read(&templ, L3GD20_OUT_Z_L_ADDR, 1);
-			GYRO_IO_Read(&temph, L3GD20_OUT_Z_H_ADDR, 1);
-			int16_t out_z = templ | temph<<8;
-			
-			float conversion = 0.07;
-		printf("Difference: previous: %f, new: %f\n", data.x, conversion*out_x);
-			if((data.x - conversion*out_x > 50)){
-				printf("START");
-				TIM1->CCR1 = dispensing;
-				LCD_DisplayString("START");
-				delay(3000); // 3 seconds
-			} else {
-				printf("Stop");
-				TIM1->CCR1 = not_dispensing;
-				LCD_DisplayString("STOP   ");
+		uint8_t templ = 0x00;
+		uint8_t temph = 0x00;
+		
+		GYRO_IO_Read(&templ, L3GD20_OUT_X_L_ADDR, 1);
+		GYRO_IO_Read(&temph, L3GD20_OUT_X_H_ADDR, 1);
+		int16_t out_x = templ | temph<<8;
+		
+		GYRO_IO_Read(&templ, L3GD20_OUT_Y_L_ADDR, 1);
+		GYRO_IO_Read(&temph, L3GD20_OUT_Y_H_ADDR, 1);
+		int16_t out_y = templ | temph<<8;
+		
+		GYRO_IO_Read(&templ, L3GD20_OUT_Z_L_ADDR, 1);
+		GYRO_IO_Read(&temph, L3GD20_OUT_Z_H_ADDR, 1);
+		int16_t out_z = templ | temph<<8;
+		
+		if(USART1->RDR & 0xFF){
+			USART1->CR1 &= ~USART_CR1_UE; // Disable USART1 to clear RDR
+			USART1->CR1 |= USART_CR1_UE; // Enable USART1 for next read
+			TIM1->CCR1 = hold_dispensing;
+			LCD_DisplayString("HOLD");
+			for(int i = 120; i > 0; i--){ // Delay the system  for 2 minutes
+				if(USART1->RDR & 0xFF){
+					USART1->CR1 &= ~USART_CR1_UE; // Disable USART1 to clear RDR
+					USART1->CR1 |= USART_CR1_UE; // Enable USART1 for next read
+					i+=60;
+				}
+				printf("Hold Remaining %d seconds.\n", i);
+				delay(1000);
 			}
-			data.x = conversion*out_x;
-			data.y = conversion*out_y;
-			data.z = conversion*out_z;
-			
-			
-			// printf("(out_x, out_y, out_z):   (%.00f, %.00f, %.00f)\n", data.x, data.y, data.z);
+		}
+		
+		float conversion = 0.07;
+		if((data.x - conversion*out_x > 50)){
+			printf("START\n");
+			TIM1->CCR1 = dispensing;
+  		LCD_DisplayString("START");
+			delay(3000); // 3 seconds
+		} else {
+			printf("Stop\n");
+			TIM1->CCR1 = not_dispensing;
+			LCD_DisplayString("STOP   ");
+		}
+		data.x = conversion*out_x;
+		data.y = conversion*out_y;
+		data.z = conversion*out_z;
+		
 		}
 		delay(500); // Small delay between receiving measurements
-
-		//sprintf(message, "%6d\n", ret);
-		//LCD_DisplayString((uint8_t*) message);
-		//printf("Sensed: %d\n", ret);
-		
-//		for(i = 0; i < 500; ++i); // Some Delay
-//		int open = 6; // this is 0 degrees 10 / 200 = 0.05
-//		int closed = 12; // this is 90 degrees 15 / 200 = 0.075
-//		LCD_DisplayString("OPEN  ");
-//		TIM1->CCR1 = open;
-//		for(int i=0; i<10000000; ++i);
-//		LCD_DisplayString("CLOSED");
-//		TIM1->CCR1 = closed;
-//		for(int i=0; i<10000000; ++i);
 	
 	return 0;
 }

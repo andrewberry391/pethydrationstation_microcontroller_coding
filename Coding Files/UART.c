@@ -1,4 +1,5 @@
 #include "UART.h"
+#include "LCD.h"
 
 void UART1_Init(void) {
 	// TODO
@@ -143,7 +144,12 @@ void USART_Init(USART_TypeDef* USARTx) {
 
 uint8_t USART_Read (USART_TypeDef * USARTx) {
 	// SR_RXNE (Read data register not empty) bit is set by hardware
-	while (!(USARTx->ISR & USART_ISR_RXNE));  // Wait until RXNE (RX not empty) bit is set
+	int counter = 0;
+	while (!(USARTx->ISR & USART_ISR_RXNE)){  // Wait until RXNE (RX not empty) bit is set
+		counter += 1;
+		if(counter > 10000000)
+			break;
+	}
 	// USART resets the RXNE flag automatically after reading DR
 	return ((uint8_t)(USARTx->RDR & 0xFF));
 	// Reading USART_DR automatically clears the RXNE flag 
@@ -175,7 +181,7 @@ void USART_IRQHandler(USART_TypeDef * USARTx, uint8_t *buffer, uint32_t * pRx_co
 		(*pRx_counter)++;  
 		if((*pRx_counter) >= BufferSize )  {
 			(*pRx_counter) = 0;
-		}   
+		}	
 	} else if(USARTx->ISR & USART_ISR_TXE) {
  		//USARTx->ISR &= ~USART_ISR_TXE;            // clear interrupt 
 		//Tx1_Counter++;
@@ -187,5 +193,5 @@ void USART_IRQHandler(USART_TypeDef * USARTx, uint8_t *buffer, uint32_t * pRx_co
 		while(1);
 	} else if (USARTx->ISR & USART_ISR_NE){ 			// Noise Error Flag
 		while(1);     
-	}	
+	}
 }
